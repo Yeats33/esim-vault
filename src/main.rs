@@ -7,10 +7,11 @@ mod parser;
 mod ui;
 mod vault;
 
+use std::io::{self, Write};
+
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    event::{self, Event, KeyCode, KeyEventKind},
+    terminal::{disable_raw_mode, enable_raw_mode, size},
 };
 
 use crate::cli::{build_cli, get_passphrase as cli_get_passphrase, get_vault_path as cli_get_vault_path};
@@ -54,14 +55,12 @@ fn run_tui(matches: &clap::ArgMatches) -> std::result::Result<(), Box<dyn std::e
     
     // Initialize TUI
     enable_raw_mode()?;
-    let mut terminal = ratatui::Terminal::new(
-        ratatui::backend::CrosstermBackend::new(std::io::stdout()),
-    )?;
+    io::stdout().write_all(b"\x1b[?1049h")?; // Enter alternate screen
+    io::stdout().write_all(b"\x1b[?1000h")?; // Enable mouse capture
+    io::stdout().flush()?;
     
-    execute!(
-        terminal.backend(),
-        EnterAlternateScreen,
-        EnableMouseCapture
+    let mut terminal = ratatui::Terminal::new(
+        ratatui::backend::CrosstermBackend::new(io::stdout()),
     )?;
     
     let mut app = App::new(
@@ -73,11 +72,8 @@ fn run_tui(matches: &clap::ArgMatches) -> std::result::Result<(), Box<dyn std::e
     let result = run_app(&mut terminal, &mut app);
     
     // Cleanup
-    execute!(
-        terminal.backend(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
+    io::stdout().write_all(b"\x1b[?1000l")?; // Disable mouse capture
+    io::stdout().write_all(b"\x1b[?1049l")?; // Leave alternate screen
     disable_raw_mode()?;
     terminal.show_cursor()?;
     
@@ -89,7 +85,7 @@ fn run_tui(matches: &clap::ArgMatches) -> std::result::Result<(), Box<dyn std::e
 }
 
 fn run_app(
-    terminal: &mut ratatui::Terminal<ratatui::backend::CrosstermBackend>,
+    terminal: &mut ratatui::Terminal<ratatui::backend::CrosstermBackend<io::Stdout>>,
     app: &mut App,
 ) -> std::result::Result<(), Box<dyn std::error::Error>> {
     loop {

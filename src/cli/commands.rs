@@ -1,6 +1,6 @@
 //! CLI commands implementation
 
-use std::io::{self, Write};
+use std::io::{self, Read, Write};
 use std::path::PathBuf;
 
 use crate::core::{Profile, ProfileStatus, Vault};
@@ -345,7 +345,8 @@ pub fn run_cli(matches: clap::ArgMatches) -> Result<()> {
             println!("\n{:36} | {:12} | {:15} | {}", "ID", "Status", "Provider", "Label");
             println!("{:-<36}-+-{:-<12}-+-{:-<15}-+-{:-<30}", '-', '-', '-', '-');
             
-            for p in profiles {
+            let total = profiles.len();
+            for p in &profiles {
                 let status = match p.status {
                     ProfileStatus::Unused => "unused",
                     ProfileStatus::Used => "used",
@@ -359,7 +360,7 @@ pub fn run_cli(matches: clap::ArgMatches) -> Result<()> {
                     p.label);
             }
             
-            println!("\nTotal: {} profiles\n", profiles.len());
+            println!("\nTotal: {} profiles\n", total);
             
             Ok(())
         }
@@ -403,13 +404,16 @@ pub fn run_cli(matches: clap::ArgMatches) -> Result<()> {
             if let Some(parsed) = &profile.parsed {
                 println!("\nParsed LPA:");
                 if let Some(smdp) = &parsed.smdp {
-                    println!("  SM-DP+: {}", if reveal { smdp } else { &mask(smdp) });
+                    let display = if reveal { smdp.clone() } else { mask(smdp) };
+                    println!("  SM-DP+: {}", display);
                 }
                 if let Some(ac) = &parsed.activation_code {
-                    println!("  Activation: {}", if reveal { ac } else { &mask(ac) });
+                    let display = if reveal { ac.clone() } else { mask(ac) };
+                    println!("  Activation: {}", display);
                 }
                 if let Some(cc) = &parsed.confirmation_code {
-                    println!("  Confirmation: {}", if reveal { cc } else { &mask(cc) });
+                    let display = if reveal { cc.clone() } else { mask(cc) };
+                    println!("  Confirmation: {}", display);
                 }
             }
             
