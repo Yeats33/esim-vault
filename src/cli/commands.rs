@@ -250,7 +250,7 @@ pub fn run_cli(matches: clap::ArgMatches) -> Result<()> {
         Some(("init", sub_matches)) => {
             let path: PathBuf = sub_matches
                 .get_one::<String>("vault")
-                .map(|s| PathBuf::from(s))
+                .map(PathBuf::from)
                 .unwrap_or_else(|| vault_path.clone());
 
             println!("Creating new vault at: {}", path.display());
