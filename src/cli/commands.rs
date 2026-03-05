@@ -22,7 +22,8 @@ pub fn build_cli() -> clap::Command {
                 .long("vault")
                 .value_name("PATH")
                 .help("Vault file path")
-                .env("ESIMVAULT_PATH"),
+                .env("ESIMVAULT_PATH")
+                .global(true),
         )
         .arg(
             Arg::new("passphrase")
@@ -30,12 +31,15 @@ pub fn build_cli() -> clap::Command {
                 .long("passphrase")
                 .value_name("PASSPHRASE")
                 .help("Vault passphrase")
-                .env("ESIMVAULT_PASSPHRASE"),
+                .env("ESIMVAULT_PASSPHRASE")
+                .global(true),
         )
         .arg(
             Arg::new("pass-stdin")
                 .long("pass-stdin")
-                .help("Read passphrase from stdin"),
+                .action(clap::ArgAction::SetTrue)
+                .help("Read passphrase from stdin")
+                .global(true),
         )
         .subcommand(
             Command::new("init")
@@ -213,8 +217,8 @@ pub fn get_passphrase(matches: &clap::ArgMatches) -> Result<String> {
 /// Get vault path from CLI args or default
 pub fn get_vault_path(matches: &clap::ArgMatches) -> PathBuf {
     // Check CLI argument
-    if let Some(vault) = matches.get_one::<std::path::PathBuf>("vault") {
-        return vault.clone();
+    if let Some(vault) = matches.get_one::<String>("vault") {
+        return PathBuf::from(vault);
     }
     
     // Check environment variable
@@ -233,9 +237,9 @@ pub fn run_cli(matches: clap::ArgMatches) -> Result<()> {
     
     match matches.subcommand() {
         Some(("init", sub_matches)) => {
-            let path = sub_matches
-                .get_one::<PathBuf>("vault")
-                .cloned()
+            let path: PathBuf = sub_matches
+                .get_one::<String>("vault")
+                .map(|s| PathBuf::from(s))
                 .unwrap_or_else(|| vault_path.clone());
             
             println!("Creating new vault at: {}", path.display());
