@@ -52,6 +52,7 @@ impl std::fmt::Display for ParsedLpa {
 
 impl ParsedLpa {
     /// Create a simple parsed LPA with just the activation code
+    #[allow(dead_code)]
     pub fn simple(activation_code: String) -> Self {
         Self {
             activation_code: Some(activation_code),
@@ -60,6 +61,7 @@ impl ParsedLpa {
     }
 
     /// Check if this is a valid (non-empty) parsed LPA
+    #[allow(dead_code)]
     pub fn is_valid(&self) -> bool {
         self.smdp.is_some() || self.activation_code.is_some()
     }

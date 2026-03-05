@@ -3,7 +3,6 @@
 use std::time::{Duration, Instant};
 
 use ratatui::{
-    backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span, Text},
@@ -46,6 +45,7 @@ pub struct App {
 }
 
 /// Input modes for the TUI
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InputMode {
     /// Normal navigation mode
@@ -83,35 +83,52 @@ impl App {
 
     /// Get filtered profiles based on current filters
     pub fn filtered_profiles(&self) -> Vec<&Profile> {
-        self.vault.profiles.iter().filter(|p| {
-            // Status filter
-            if let Some(status) = &self.status_filter {
-                if &p.status != status {
-                    return false;
+        self.vault
+            .profiles
+            .iter()
+            .filter(|p| {
+                // Status filter
+                if let Some(status) = &self.status_filter {
+                    if &p.status != status {
+                        return false;
+                    }
                 }
-            }
-            
-            // Tag filter
-            if !self.tag_filter.is_empty() {
-                if !self.tag_filter.iter().any(|t| p.region_tags.contains(t)) {
-                    return false;
-                }
-            }
-            
-            // Search filter
-            if !self.search_query.is_empty() {
-                let query = self.search_query.to_lowercase();
-                if !p.label.to_lowercase().contains(&query)
-                    && !p.provider.as_ref().map(|s| s.to_lowercase()).unwrap_or_default().contains(&query)
-                    && !p.region_tags.iter().any(|t| t.to_lowercase().contains(&query))
-                    && !p.notes.as_ref().map(|s| s.to_lowercase()).unwrap_or_default().contains(&query)
+
+                // Tag filter
+                if !self.tag_filter.is_empty()
+                    && !self.tag_filter.iter().any(|t| p.region_tags.contains(t))
                 {
                     return false;
                 }
-            }
-            
-            true
-        }).collect()
+
+                // Search filter
+                if !self.search_query.is_empty() {
+                    let query = self.search_query.to_lowercase();
+                    if !p.label.to_lowercase().contains(&query)
+                        && !p
+                            .provider
+                            .as_ref()
+                            .map(|s| s.to_lowercase())
+                            .unwrap_or_default()
+                            .contains(&query)
+                        && !p
+                            .region_tags
+                            .iter()
+                            .any(|t| t.to_lowercase().contains(&query))
+                        && !p
+                            .notes
+                            .as_ref()
+                            .map(|s| s.to_lowercase())
+                            .unwrap_or_default()
+                            .contains(&query)
+                    {
+                        return false;
+                    }
+                }
+
+                true
+            })
+            .collect()
     }
 
     /// Get the currently selected profile
@@ -162,6 +179,7 @@ impl App {
     }
 
     /// Clear any error message
+    #[allow(dead_code)]
     pub fn clear_error(&mut self) {
         self.error_message = None;
     }
@@ -188,10 +206,7 @@ impl App {
 pub fn render(frame: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage(35),
-            Constraint::Percentage(65),
-        ])
+        .constraints([Constraint::Percentage(35), Constraint::Percentage(65)])
         .split(frame.size());
 
     // Render profile list
@@ -210,7 +225,7 @@ pub fn render(frame: &mut Frame, app: &App) {
 
 fn render_profile_list(frame: &mut Frame, app: &App, area: Rect) {
     let profiles = app.filtered_profiles();
-    
+
     let items: Vec<ListItem> = profiles
         .iter()
         .enumerate()
@@ -220,55 +235,67 @@ fn render_profile_list(frame: &mut Frame, app: &App, area: Rect) {
                 ProfileStatus::Used => "●",
                 ProfileStatus::Expired => "✗",
             };
-            
+
             let status_color = match p.status {
                 ProfileStatus::Unused => Color::DarkGray,
                 ProfileStatus::Used => Color::Green,
                 ProfileStatus::Expired => Color::Red,
             };
-            
+
             let label = if i == app.selected {
                 format!("{} {}", status_icon, p.label)
             } else {
                 p.label.clone()
             };
-            
-            ListItem::new(label)
-                .style(if i == app.selected {
-                    Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
-                } else {
-                    Style::default().fg(status_color)
-                })
+
+            ListItem::new(label).style(if i == app.selected {
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(status_color)
+            })
         })
         .collect();
 
     let list = List::new(items)
-        .block(Block::default()
-            .borders(Borders::ALL)
-            .title("eSIM Profiles")
-            .title_style(Style::default().fg(Color::Cyan)))
-        .highlight_style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD));
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("eSIM Profiles")
+                .title_style(Style::default().fg(Color::Cyan)),
+        )
+        .highlight_style(
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        );
 
     frame.render_widget(list, area);
 }
 
 fn render_profile_details(frame: &mut Frame, app: &App, area: Rect) {
     let profile = app.selected_profile();
-    
+
     let content = if let Some(p) = profile {
         let mut lines = Vec::new();
-        
+
         // Header
         lines.push(Line::from(vec![
             Span::raw("ID: "),
             Span::styled(p.id.clone(), Style::default().fg(Color::DarkGray)),
         ]));
-        
+
         lines.push(Line::from(vec![
             Span::raw("Label: "),
-            Span::styled(p.label.clone(), Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                p.label.clone(),
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
         ]));
-        
+
         // Provider
         if let Some(provider) = &p.provider {
             lines.push(Line::from(vec![
@@ -276,7 +303,7 @@ fn render_profile_details(frame: &mut Frame, app: &App, area: Rect) {
                 Span::styled(provider.clone(), Style::default().fg(Color::Green)),
             ]));
         }
-        
+
         // Status
         let status_text = match p.status {
             ProfileStatus::Unused => "Unused",
@@ -292,7 +319,7 @@ fn render_profile_details(frame: &mut Frame, app: &App, area: Rect) {
             Span::raw("Status: "),
             Span::styled(status_text, Style::default().fg(status_color)),
         ]));
-        
+
         // Tags
         if !p.region_tags.is_empty() {
             lines.push(Line::from(Span::raw("")));
@@ -304,7 +331,7 @@ fn render_profile_details(frame: &mut Frame, app: &App, area: Rect) {
                 ]));
             }
         }
-        
+
         // Timestamps
         lines.push(Line::from(Span::raw("")));
         lines.push(Line::from(vec![
@@ -315,25 +342,28 @@ fn render_profile_details(frame: &mut Frame, app: &App, area: Rect) {
             Span::raw("Updated: "),
             Span::raw(p.updated_at.format("%Y-%m-%d %H:%M:%S").to_string()),
         ]));
-        
+
         // LPA Payload (sensitive)
         lines.push(Line::from(Span::raw("")));
         lines.push(Line::from("LPA Payload:"));
-        
+
         let payload_display = if app.reveal {
             p.lpa_payload_raw.clone()
         } else {
             mask_lpa_payload(&p.lpa_payload_raw)
         };
-        
-        lines.push(Line::from(Span::styled(payload_display, Style::default().fg(Color::Yellow))));
-        
+
+        lines.push(Line::from(Span::styled(
+            payload_display,
+            Style::default().fg(Color::Yellow),
+        )));
+
         // Parsed fields
         if let Some(parsed) = &p.parsed {
             if parsed.smdp.is_some() || parsed.activation_code.is_some() {
                 lines.push(Line::from(Span::raw("")));
                 lines.push(Line::from("Parsed LPA:"));
-                
+
                 if let Some(smdp) = &parsed.smdp {
                     let display = if app.reveal {
                         smdp.clone()
@@ -345,7 +375,7 @@ fn render_profile_details(frame: &mut Frame, app: &App, area: Rect) {
                         Span::styled(display, Style::default().fg(Color::Blue)),
                     ]));
                 }
-                
+
                 if let Some(ac) = &parsed.activation_code {
                     let display = if app.reveal {
                         ac.clone()
@@ -357,7 +387,7 @@ fn render_profile_details(frame: &mut Frame, app: &App, area: Rect) {
                         Span::styled(display, Style::default().fg(Color::Blue)),
                     ]));
                 }
-                
+
                 if let Some(cc) = &parsed.confirmation_code {
                     let display = if app.reveal {
                         cc.clone()
@@ -371,14 +401,14 @@ fn render_profile_details(frame: &mut Frame, app: &App, area: Rect) {
                 }
             }
         }
-        
+
         // Notes
         if let Some(notes) = &p.notes {
             lines.push(Line::from(Span::raw("")));
             lines.push(Line::from("Notes:"));
             lines.push(Line::from(notes.as_str()));
         }
-        
+
         // Reveal indicator
         if app.reveal {
             if let Some(until) = app.reveal_until {
@@ -386,35 +416,44 @@ fn render_profile_details(frame: &mut Frame, app: &App, area: Rect) {
                 lines.push(Line::from(Span::raw("")));
                 lines.push(Line::from(Span::styled(
                     format!("Revealing for {}s", remaining.as_secs()),
-                    Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
                 )));
             }
         }
-        
+
         lines
     } else {
         vec![Line::from("No profile selected")]
     };
 
     let paragraph = Paragraph::new(Text::from(content))
-        .block(Block::default()
-            .borders(Borders::ALL)
-            .title("Details")
-            .title_style(Style::default().fg(Color::Cyan)))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Details")
+                .title_style(Style::default().fg(Color::Cyan)),
+        )
         .wrap(ratatui::widgets::Wrap { trim: true });
 
     frame.render_widget(paragraph, area);
 }
 
 fn render_help_bar(frame: &mut Frame) {
-    let area = Rect::new(0, frame.size().height.saturating_sub(2), frame.size().width, 2);
-    
+    let area = Rect::new(
+        0,
+        frame.size().height.saturating_sub(2),
+        frame.size().width,
+        2,
+    );
+
     let help_text = "a:Add /:Search t:Tags m:Mark q:QR r:Reveal ?:Help Q:Quit";
-    
+
     let paragraph = Paragraph::new(help_text)
         .style(Style::default().bg(Color::DarkGray).fg(Color::White))
         .alignment(ratatui::layout::Alignment::Center);
-    
+
     frame.render_widget(paragraph, area);
 }
 
@@ -445,10 +484,12 @@ fn render_help_overlay(frame: &mut Frame) {
 "#;
 
     let paragraph = Paragraph::new(help_text)
-        .block(Block::default()
-            .borders(Borders::ALL)
-            .title("Help")
-            .title_style(Style::default().fg(Color::Cyan)))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Help")
+                .title_style(Style::default().fg(Color::Cyan)),
+        )
         .alignment(ratatui::layout::Alignment::Center);
 
     let overlay = ratatui::widgets::Clear;

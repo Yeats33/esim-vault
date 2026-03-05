@@ -122,6 +122,7 @@ impl Profile {
     }
 
     /// Re-parse the LPA payload
+    #[allow(dead_code)]
     pub fn reparse(&mut self) {
         self.parsed = crate::parser::parse_lpa(&self.lpa_payload_raw).ok();
         self.updated_at = Utc::now();
@@ -147,8 +148,14 @@ mod tests {
 
     #[test]
     fn test_profile_status_from_str() {
-        assert_eq!("unused".parse::<ProfileStatus>().unwrap(), ProfileStatus::Unused);
-        assert_eq!("USED".parse::<ProfileStatus>().unwrap(), ProfileStatus::Used);
+        assert_eq!(
+            "unused".parse::<ProfileStatus>().unwrap(),
+            ProfileStatus::Unused
+        );
+        assert_eq!(
+            "USED".parse::<ProfileStatus>().unwrap(),
+            ProfileStatus::Used
+        );
         assert!("invalid".parse::<ProfileStatus>().is_err());
     }
 }

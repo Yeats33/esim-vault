@@ -3,7 +3,7 @@
 mod lpa;
 mod profile;
 
-pub use lpa::{ParsedLpa, LpaField};
+pub use lpa::{LpaField, ParsedLpa};
 pub use profile::{Profile, ProfileStatus};
 
 use serde::{Deserialize, Serialize};
@@ -43,6 +43,7 @@ impl Vault {
         self.profiles.iter_mut().find(|p| p.id == id)
     }
 
+    #[allow(dead_code)]
     pub fn remove_profile(&mut self, id: &str) -> Option<Profile> {
         if let Some(pos) = self.profiles.iter().position(|p| p.id == id) {
             Some(self.profiles.remove(pos))
