@@ -2,4 +2,4 @@
 
 mod commands;
 
-pub use commands::{build_cli, run_cli, get_passphrase, get_vault_path};
+pub use commands::{build_cli, get_passphrase, get_vault_path, run_cli};

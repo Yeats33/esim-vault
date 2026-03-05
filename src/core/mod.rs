@@ -3,7 +3,7 @@
 mod lpa;
 mod profile;
 
-pub use lpa::{ParsedLpa, LpaField};
+pub use lpa::{LpaField, ParsedLpa};
 pub use profile::{Profile, ProfileStatus};
 
 use serde::{Deserialize, Serialize};

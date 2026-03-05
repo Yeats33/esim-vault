@@ -15,14 +15,16 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, size},
 };
 
-use crate::cli::{build_cli, get_passphrase as cli_get_passphrase, get_vault_path as cli_get_vault_path};
+use crate::cli::{
+    build_cli, get_passphrase as cli_get_passphrase, get_vault_path as cli_get_vault_path,
+};
 use crate::ui::app::{render, App, InputMode};
 use crate::vault as vault_mod;
 
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let cli = build_cli();
     let matches = cli.clone().get_matches();
-    
+
     // Check if TUI mode is requested
     if let Some(("tui", _)) = matches.subcommand() {
         run_tui(&matches)?;
@@ -30,21 +32,21 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Run CLI commands
         crate::cli::run_cli(matches)?;
     }
-    
+
     Ok(())
 }
 
 fn run_tui(matches: &clap::ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
     let vault_path = cli_get_vault_path(matches);
     let passphrase = cli_get_passphrase(matches)?;
-    
+
     // Check if vault exists
     if !vault_path.exists() {
         eprintln!("Error: Vault file not found: {}", vault_path.display());
         eprintln!("Run 'esimvault init' to create a new vault first.");
         std::process::exit(1);
     }
-    
+
     // Load vault
     let vault = match vault_mod::load_vault(&vault_path, &passphrase) {
         Ok(v) => v,
@@ -53,35 +55,30 @@ fn run_tui(matches: &clap::ArgMatches) -> std::result::Result<(), Box<dyn std::e
             std::process::exit(1);
         }
     };
-    
+
     // Initialize TUI
     enable_raw_mode()?;
     io::stdout().write_all(b"\x1b[?1049h")?; // Enter alternate screen
     io::stdout().write_all(b"\x1b[?1000h")?; // Enable mouse capture
     io::stdout().flush()?;
-    
-    let mut terminal = ratatui::Terminal::new(
-        ratatui::backend::CrosstermBackend::new(io::stdout()),
-    )?;
-    
-    let mut app = App::new(
-        vault,
-        vault_path.to_string_lossy().to_string(),
-        passphrase,
-    );
-    
+
+    let mut terminal =
+        ratatui::Terminal::new(ratatui::backend::CrosstermBackend::new(io::stdout()))?;
+
+    let mut app = App::new(vault, vault_path.to_string_lossy().to_string(), passphrase);
+
     let result = run_app(&mut terminal, &mut app);
-    
+
     // Cleanup
     io::stdout().write_all(b"\x1b[?1000l")?; // Disable mouse capture
     io::stdout().write_all(b"\x1b[?1049l")?; // Leave alternate screen
     disable_raw_mode()?;
     terminal.show_cursor()?;
-    
+
     if let Err(e) = result {
         eprintln!("Error: {}", e);
     }
-    
+
     Ok(())
 }
 
@@ -92,9 +89,9 @@ fn run_app(
     loop {
         // Check reveal expiry
         app.check_reveal_expiry();
-        
+
         terminal.draw(|f| render(f, app))?;
-        
+
         // Handle input
         if let Event::Key(key) = event::read()? {
             if key.kind == KeyEventKind::Press {
@@ -110,10 +107,13 @@ fn run_app(
     }
 }
 
-fn handle_normal_input(app: &mut App, key: &crossterm::event::KeyEvent) -> std::result::Result<(), Box<dyn std::error::Error>> {
+fn handle_normal_input(
+    app: &mut App,
+    key: &crossterm::event::KeyEvent,
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     use crossterm::event::KeyCode;
     use crossterm::event::KeyModifiers;
-    
+
     match key.code {
         KeyCode::Char('q') => {
             if key.modifiers.contains(KeyModifiers::SHIFT) {
@@ -136,7 +136,7 @@ fn handle_normal_input(app: &mut App, key: &crossterm::event::KeyEvent) -> std::
         }
         KeyCode::Char('m') => {
             let profile_id = app.selected_profile().map(|p| p.id.clone());
-            
+
             if let Some(id) = profile_id {
                 let next = {
                     if let Some(p) = app.vault.get_profile(&id) {
@@ -149,7 +149,7 @@ fn handle_normal_input(app: &mut App, key: &crossterm::event::KeyEvent) -> std::
                         core::ProfileStatus::Unused
                     }
                 };
-                
+
                 if let Some(profile) = app.vault.get_profile_mut(&id) {
                     profile.set_status(next);
                     app.modified = true;
@@ -178,13 +178,16 @@ fn handle_normal_input(app: &mut App, key: &crossterm::event::KeyEvent) -> std::
         KeyCode::Enter => {}
         _ => {}
     }
-    
+
     Ok(())
 }
 
-fn handle_search_input(app: &mut App, key: &crossterm::event::KeyEvent) -> std::result::Result<(), Box<dyn std::error::Error>> {
+fn handle_search_input(
+    app: &mut App,
+    key: &crossterm::event::KeyEvent,
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     use crossterm::event::KeyCode;
-    
+
     match key.code {
         KeyCode::Esc => {
             app.search_query.clear();
@@ -201,13 +204,16 @@ fn handle_search_input(app: &mut App, key: &crossterm::event::KeyEvent) -> std::
         }
         _ => {}
     }
-    
+
     Ok(())
 }
 
-fn handle_add_input(app: &mut App, key: &crossterm::event::KeyEvent) -> std::result::Result<(), Box<dyn std::error::Error>> {
+fn handle_add_input(
+    app: &mut App,
+    key: &crossterm::event::KeyEvent,
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     use crossterm::event::KeyCode;
-    
+
     match key.code {
         KeyCode::Esc => {
             app.exit_input_mode();
@@ -223,13 +229,16 @@ fn handle_add_input(app: &mut App, key: &crossterm::event::KeyEvent) -> std::res
         }
         _ => {}
     }
-    
+
     Ok(())
 }
 
-fn handle_tags_input(app: &mut App, key: &crossterm::event::KeyEvent) -> std::result::Result<(), Box<dyn std::error::Error>> {
+fn handle_tags_input(
+    app: &mut App,
+    key: &crossterm::event::KeyEvent,
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     use crossterm::event::KeyCode;
-    
+
     match key.code {
         KeyCode::Esc => {
             app.exit_input_mode();
@@ -237,14 +246,14 @@ fn handle_tags_input(app: &mut App, key: &crossterm::event::KeyEvent) -> std::re
         KeyCode::Enter => {
             let profile_id = app.selected_profile().map(|p| p.id.clone());
             let input_text = app.input_text.clone();
-            
+
             if let Some(id) = profile_id {
                 let tags: Vec<String> = input_text
                     .split(',')
                     .map(|s| s.trim().to_string())
                     .filter(|s| !s.is_empty())
                     .collect();
-                
+
                 for tag in tags {
                     if let Some(profile) = app.vault.get_profile_mut(&id) {
                         profile.add_tag(tag);
@@ -262,13 +271,16 @@ fn handle_tags_input(app: &mut App, key: &crossterm::event::KeyEvent) -> std::re
         }
         _ => {}
     }
-    
+
     Ok(())
 }
 
-fn handle_qr_input(app: &mut App, key: &crossterm::event::KeyEvent) -> std::result::Result<(), Box<dyn std::error::Error>> {
+fn handle_qr_input(
+    app: &mut App,
+    key: &crossterm::event::KeyEvent,
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     use crossterm::event::KeyCode;
-    
+
     match key.code {
         KeyCode::Esc => {
             app.exit_input_mode();
@@ -276,7 +288,7 @@ fn handle_qr_input(app: &mut App, key: &crossterm::event::KeyEvent) -> std::resu
         KeyCode::Enter => {
             let profile_id = app.selected_profile().map(|p| p.id.clone());
             let lpa_payload = app.selected_profile().map(|p| p.lpa_payload_raw.clone());
-            
+
             if let (Some(id), Some(payload)) = (profile_id, lpa_payload) {
                 #[cfg(feature = "qr-encode")]
                 {
@@ -301,6 +313,6 @@ fn handle_qr_input(app: &mut App, key: &crossterm::event::KeyEvent) -> std::resu
         }
         _ => {}
     }
-    
+
     Ok(())
 }

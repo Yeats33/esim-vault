@@ -147,8 +147,14 @@ mod tests {
 
     #[test]
     fn test_profile_status_from_str() {
-        assert_eq!("unused".parse::<ProfileStatus>().unwrap(), ProfileStatus::Unused);
-        assert_eq!("USED".parse::<ProfileStatus>().unwrap(), ProfileStatus::Used);
+        assert_eq!(
+            "unused".parse::<ProfileStatus>().unwrap(),
+            ProfileStatus::Unused
+        );
+        assert_eq!(
+            "USED".parse::<ProfileStatus>().unwrap(),
+            ProfileStatus::Used
+        );
         assert!("invalid".parse::<ProfileStatus>().is_err());
     }
 }

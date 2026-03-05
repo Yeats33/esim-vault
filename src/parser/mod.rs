@@ -2,7 +2,7 @@
 
 mod lpa_parser;
 
-pub use lpa_parser::{parse_lpa, generate_qr_image};
+pub use lpa_parser::{generate_qr_image, parse_lpa};
 
 #[cfg(test)]
 mod tests {
