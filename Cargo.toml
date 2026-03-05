@@ -5,7 +5,7 @@ edition = "2021"
 authors = ["Your Name <your@email.com>"]
 description = "Offline-first eSIM wallet/manager TUI tool"
 license = "Apache-2.0"
-repository = "https://github.com/yourusername/esim-vault"
+repository = "https://github.com/Yeats33/esim-vault"
 keywords = ["esim", "tui", "vault", "qrcode"]
 categories = ["command-line-utilities", "cryptography"]
 
@@ -43,10 +43,14 @@ dirs = "5.0"
 regex = "1.10"
 rpassword = "7.4"
 
+# HTTP client for update checking
+reqwest = { version = "0.12", features = ["blocking", "json"], optional = true }
+
 [features]
 default = ["qr-encode"]
 qr-encode = ["dep:qrcode", "dep:image"]
 qr-decode = []  # Requires system dependencies: zbar
+check-update = ["dep:reqwest"]
 
 [dev-dependencies]
 tempfile = "3.10"

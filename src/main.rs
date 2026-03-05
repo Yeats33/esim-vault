@@ -5,6 +5,7 @@ mod core;
 mod error;
 mod parser;
 mod ui;
+mod update;
 mod vault;
 
 use std::io::{self, Write};

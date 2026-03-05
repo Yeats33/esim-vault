@@ -176,6 +176,22 @@ pub fn build_cli() -> clap::Command {
                         .help("Set notes"),
                 ),
         )
+        .subcommand(
+            Command::new("check-update")
+                .about("Check for updates")
+                .long_about("Check if a newer version is available on GitHub releases")
+                .arg(
+                    Arg::new("repo")
+                        .short('r')
+                        .long("repo")
+                        .value_name("REPO")
+                        .help("GitHub repository in format 'owner/repo' (default: Yeats33/esim-vault)"),
+                ),
+        )
+        .subcommand(
+            Command::new("version")
+                .about("Show version information"),
+        )
 }
 
 /// Get passphrase from CLI args or prompt
@@ -521,6 +537,70 @@ pub fn run_cli(matches: clap::ArgMatches) -> Result<()> {
             vault::save_vault(&vault, &vault_path, &passphrase)?;
             println!("Profile updated successfully!");
             
+            Ok(())
+        }
+        
+        Some(("check-update", sub_matches)) => {
+            #[cfg(feature = "check-update")]
+            {
+                let repo = sub_matches
+                    .get_one::<String>("repo")
+                    .cloned()
+                    .unwrap_or_else(|| "Yeats33/esim-vault".to_string());
+                
+                let parts: Vec<&str> = repo.split('/').collect();
+                if parts.len() != 2 {
+                    return Err(crate::error::Error::Vault("Invalid repository format. Use 'owner/repo'".to_string()));
+                }
+                
+                let (owner, name) = (parts[0], parts[1]);
+                
+                println!("Checking for updates...");
+                
+                match crate::update::check_for_update(owner, name) {
+                    Ok(status) => {
+                        match status {
+                            crate::update::UpdateStatus::UpToDate => {
+                                println!("✓ You're running the latest version!");
+                                println!("  Current version: {}", crate::update::get_current_version());
+                            }
+                            crate::update::UpdateStatus::UpdateAvailable(tag) => {
+                                println!("✗ A new version is available!");
+                                println!("  Current version: {}", crate::update::get_current_version());
+                                println!("  Latest version:  {}", tag);
+                                println!("\nVisit https://github.com/{}/releases to download the update.", repo);
+                            }
+                            crate::update::UpdateStatus::NoReleases => {
+                                println!("ℹ No releases found for this repository.");
+                                println!("  Current version: {}", crate::update::get_current_version());
+                                println!("\nVisit https://github.com/{}/releases to check for updates.", repo);
+                            }
+                        }
+                        Ok(())
+                    }
+                    Err(e) => {
+                        // Check if it's a 404 (repository not found or no releases)
+                        if e.contains("404") {
+                            eprintln!("No releases found for {}", repo);
+                            eprintln!("Please visit https://github.com/{}/releases to check for updates manually.", repo);
+                        } else {
+                            eprintln!("Error checking for updates: {}", e);
+                        }
+                        Err(crate::error::Error::Vault(e))
+                    }
+                }
+            }
+            
+            #[cfg(not(feature = "check-update"))]
+            {
+                eprintln!("Update checking is not enabled.");
+                eprintln!("Compile with --features check-update to enable this feature.");
+                Err(crate::error::Error::Vault("Update checking not enabled".to_string()))
+            }
+        }
+        
+        Some(("version", _sub_matches)) => {
+            println!("esim-vault {}", crate::update::get_current_version());
             Ok(())
         }
         
