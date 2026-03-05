@@ -3,13 +3,13 @@
 use std::io::{self, Write};
 use std::path::PathBuf;
 
-use crate::core::{ParsedLpa, Profile, ProfileStatus, Vault};
+use crate::core::{Profile, ProfileStatus, Vault};
 use crate::error::Result;
 use crate::parser;
 use crate::vault;
 
 /// Build the CLI parser
-pub fn build_cli() -> clap::Command<'static> {
+pub fn build_cli() -> clap::Command {
     use clap::{Arg, Command};
     
     Command::new("esimvault")
@@ -191,7 +191,7 @@ pub fn get_passphrase(matches: &clap::ArgMatches) -> Result<String> {
     // Check --pass-stdin
     if matches.get_flag("pass-stdin") {
         let mut input = String::new();
-        io::stdin().read_to_string(&mut input)?;
+        std::io::stdin().read_to_string(&mut input)?;
         return Ok(input.trim().to_string());
     }
     
@@ -239,7 +239,7 @@ pub fn run_cli(matches: clap::ArgMatches) -> Result<()> {
                 .unwrap_or_else(|| vault_path.clone());
             
             println!("Creating new vault at: {}", path.display());
-            let vault = vault::create_vault(&path, &passphrase)?;
+            let _vault = vault::create_vault(&path, &passphrase)?;
             println!("Vault created successfully!");
             Ok(())
         }
@@ -255,7 +255,7 @@ pub fn run_cli(matches: clap::ArgMatches) -> Result<()> {
                 .unwrap_or_else(|| {
                     println!("Enter LPA payload:");
                     let mut input = String::new();
-                    io::stdin().read_line(&mut input).unwrap();
+                    std::io::stdin().read_to_string(&mut input).unwrap();
                     input.trim().to_string()
                 });
             
@@ -271,7 +271,7 @@ pub fn run_cli(matches: clap::ArgMatches) -> Result<()> {
                 .unwrap_or_else(|| {
                     println!("Enter label (e.g., 'Airalo Japan 10GB'):");
                     let mut input = String::new();
-                    io::stdin().read_line(&mut input).unwrap();
+                    std::io::stdin().read_to_string(&mut input).unwrap();
                     input.trim().to_string()
                 });
             
@@ -343,7 +343,7 @@ pub fn run_cli(matches: clap::ArgMatches) -> Result<()> {
             
             // Print table
             println!("\n{:36} | {:12} | {:15} | {}", "ID", "Status", "Provider", "Label");
-            println!("{:-<36}-+-{:-<12}-+-{:-<15}-+-{:-<0$}", "", "", "", 30);
+            println!("{:-<36}-+-{:-<12}-+-{:-<15}-+-{:-<30}", '-', '-', '-', '-');
             
             for p in profiles {
                 let status = match p.status {
@@ -528,7 +528,6 @@ fn mask(s: &str) -> String {
         "*".repeat(s.len())
     } else {
         let visible = &s[..2];
-        let masked = "*".repeat(s.len() - 4);
         let end = &s[s.len() - 2..];
         format!("{}...{}", visible, end)
     }

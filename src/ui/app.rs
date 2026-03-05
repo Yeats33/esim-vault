@@ -1,11 +1,9 @@
 //! Main TUI application
 
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use ratatui::{
-    backend::Backend,
+    backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span, Text},
@@ -187,7 +185,7 @@ impl App {
 }
 
 /// Render the main UI
-pub fn render<B: Backend>(frame: &mut Frame<B>, app: &App) {
+pub fn render(frame: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
@@ -204,13 +202,13 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, app: &App) {
 
     // Render help bar at the bottom
     if app.show_help {
-        render_help_overlay(frame, app);
+        render_help_overlay(frame);
     } else {
-        render_help_bar(frame, app);
+        render_help_bar(frame);
     }
 }
 
-fn render_profile_list<B: Backend>(frame: &mut Frame<B>, app: &App, area: Rect) {
+fn render_profile_list(frame: &mut Frame, app: &App, area: Rect) {
     let profiles = app.filtered_profiles();
     
     let items: Vec<ListItem> = profiles
@@ -254,7 +252,7 @@ fn render_profile_list<B: Backend>(frame: &mut Frame<B>, app: &App, area: Rect) 
     frame.render_widget(list, area);
 }
 
-fn render_profile_details<B: Backend>(frame: &mut Frame<B>, app: &App, area: Rect) {
+fn render_profile_details(frame: &mut Frame, app: &App, area: Rect) {
     let profile = app.selected_profile();
     
     let content = if let Some(p) = profile {
@@ -263,19 +261,19 @@ fn render_profile_details<B: Backend>(frame: &mut Frame<B>, app: &App, area: Rec
         // Header
         lines.push(Line::from(vec![
             Span::raw("ID: "),
-            Span::styled(&p.id, Style::default().fg(Color::DarkGray)),
+            Span::styled(p.id.clone(), Style::default().fg(Color::DarkGray)),
         ]));
         
         lines.push(Line::from(vec![
             Span::raw("Label: "),
-            Span::styled(&p.label, Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+            Span::styled(p.label.clone(), Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
         ]));
         
         // Provider
         if let Some(provider) = &p.provider {
             lines.push(Line::from(vec![
                 Span::raw("Provider: "),
-                Span::styled(provider, Style::default().fg(Color::Green)),
+                Span::styled(provider.clone(), Style::default().fg(Color::Green)),
             ]));
         }
         
@@ -302,7 +300,7 @@ fn render_profile_details<B: Backend>(frame: &mut Frame<B>, app: &App, area: Rec
             for tag in &p.region_tags {
                 lines.push(Line::from(vec![
                     Span::raw("  #"),
-                    Span::styled(tag, Style::default().fg(Color::Magenta)),
+                    Span::styled(tag.clone(), Style::default().fg(Color::Magenta)),
                 ]));
             }
         }
@@ -328,9 +326,7 @@ fn render_profile_details<B: Backend>(frame: &mut Frame<B>, app: &App, area: Rec
             mask_lpa_payload(&p.lpa_payload_raw)
         };
         
-        lines.push(Line::from(vec![
-            Span::styled(&payload_display, Style::default().fg(Color::Yellow)),
-        ]));
+        lines.push(Line::from(Span::styled(payload_display, Style::default().fg(Color::Yellow))));
         
         // Parsed fields
         if let Some(parsed) = &p.parsed {
@@ -388,12 +384,10 @@ fn render_profile_details<B: Backend>(frame: &mut Frame<B>, app: &App, area: Rec
             if let Some(until) = app.reveal_until {
                 let remaining = until.saturating_duration_since(Instant::now());
                 lines.push(Line::from(Span::raw("")));
-                lines.push(Line::from(vec![
-                    Span::styled(
-                        format!("Revealing for {}s", remaining.as_secs()),
-                        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
-                    ),
-                ]));
+                lines.push(Line::from(Span::styled(
+                    format!("Revealing for {}s", remaining.as_secs()),
+                    Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+                )));
             }
         }
         
@@ -412,14 +406,10 @@ fn render_profile_details<B: Backend>(frame: &mut Frame<B>, app: &App, area: Rec
     frame.render_widget(paragraph, area);
 }
 
-fn render_help_bar<B: Backend>(frame: &mut Frame<B>, app: &App) {
+fn render_help_bar(frame: &mut Frame) {
     let area = Rect::new(0, frame.size().height.saturating_sub(2), frame.size().width, 2);
     
-    let help_text = if app.input_mode != InputMode::Normal {
-        "Type: Enter to confirm | Esc to cancel"
-    } else {
-        "a:Add /:Search t:Tags m:Mark q:QR r:Reveal ?:Help q:Quit"
-    };
+    let help_text = "a:Add /:Search t:Tags m:Mark q:QR r:Reveal ?:Help Q:Quit";
     
     let paragraph = Paragraph::new(help_text)
         .style(Style::default().bg(Color::DarkGray).fg(Color::White))
@@ -428,7 +418,7 @@ fn render_help_bar<B: Backend>(frame: &mut Frame<B>, app: &App) {
     frame.render_widget(paragraph, area);
 }
 
-fn render_help_overlay<B: Backend>(frame: &mut Frame<B>, app: &App) {
+fn render_help_overlay(frame: &mut Frame) {
     let area = frame.size();
     let help_text = r#"
 ╔══════════════════════════════════════════════════════════════════╗
@@ -447,7 +437,7 @@ fn render_help_overlay<B: Backend>(frame: &mut Frame<B>, app: &App) {
 ║    q               Generate QR code                               ║
 ║    r               Reveal sensitive data (10 seconds)            ║
 ║    ?               Toggle this help                               ║
-║    Ctrl+C or Q     Quit                                          ║
+║    Q or Ctrl+C     Quit                                          ║
 ║                                                                  ║
 ║  Note: This tool manages eSIM information and generates QR       ║
 ║  codes. Actual eSIM installation is done on your phone.        ║
@@ -464,15 +454,11 @@ fn render_help_overlay<B: Backend>(frame: &mut Frame<B>, app: &App) {
     let overlay = ratatui::widgets::Clear;
     frame.render_widget(overlay, area);
 
-    let center = Layout::default()
-        .constraints([
-            Constraint::Percentage(80),
-        ])
-        .horizontal_centerment()
-        .vertical_centerment()
-        .split(area);
+    let center_x = (area.width - 60) / 2;
+    let center_y = (area.height - 20) / 2;
+    let center = Rect::new(center_x, center_y, 60, 20);
 
-    frame.render_widget(paragraph, center[0]);
+    frame.render_widget(paragraph, center);
 }
 
 fn mask_lpa_payload(payload: &str) -> String {
@@ -480,7 +466,6 @@ fn mask_lpa_payload(payload: &str) -> String {
         "*".repeat(payload.len())
     } else {
         let visible = &payload[..4];
-        let masked = "*".repeat(payload.len() - 8);
         let end = &payload[payload.len() - 4..];
         format!("{}...{}", visible, end)
     }
@@ -491,7 +476,6 @@ fn mask_sensitive(s: &str) -> String {
         "*".repeat(s.len())
     } else {
         let visible = &s[..2];
-        let masked = "*".repeat(s.len() - 4);
         let end = &s[s.len() - 2..];
         format!("{}...{}", visible, end)
     }

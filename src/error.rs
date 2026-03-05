@@ -39,31 +39,3 @@ pub enum Error {
     #[error("TUI error: {0}")]
     Tui(String),
 }
-
-impl From<age::DecryptError> for Error {
-    fn from(e: age::DecryptError) -> Self {
-        Error::Decryption(e.to_string())
-    }
-}
-
-impl From<age::EncryptError> for Error {
-    fn from(e: age::EncryptError) -> Self {
-        Error::Encryption(e.to_string())
-    }
-}
-
-impl From<age::key::UnsupportedVersion> for Error {
-    fn from(e: age::key::UnsupportedVersion) -> Self {
-        Error::Crypto(e.to_string())
-    }
-}
-
-impl From<qrcode::QrCodeError> for Error {
-    fn from(e: qrcod::QrCodeError) -> Self {
-        Error::Qr(e.to_string())
-    }
-}
-
-mod qrcod {
-    pub use qrcode::QrCodeError;
-}

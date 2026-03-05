@@ -1,0 +1,25 @@
+# Build results
+target/
+debug/
+release/
+*.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Vault files (sensitive)
+*.esimvault
+
+# Env files
+.env
+.env.local
+
+# Logs
+*.log

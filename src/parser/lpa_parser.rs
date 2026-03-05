@@ -2,7 +2,7 @@
 
 use regex::Regex;
 
-use crate::core::lpa::{LpaField, ParsedLpa};
+use crate::core::{LpaField, ParsedLpa};
 use crate::error::{Error, Result};
 
 /// Parse an LPA payload string into structured fields

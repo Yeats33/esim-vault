@@ -12,7 +12,6 @@ categories = ["command-line-utilities", "cryptography"]
 [dependencies]
 # CLI
 clap = { version = "4.5", features = ["derive", "env"] }
-clap_complete = "4.5"
 
 # TUI
 ratatui = "0.27"
@@ -23,20 +22,17 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
 # Cryptography
-age = "0.9"
-age-core = "0.9"
 uuid = { version = "1.8", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 sha2 = "0.10"
 base64 = "0.22"
-x25519-dalek = { version = "2.0", features = ["static_secrets"] }
-chacha20poly1305 = "0.10"
+aes-gcm = "0.10"
 rand = "0.8"
 getrandom = "0.2"
 
 # QR Code
-qrcode = "0.14"
-image = "0.25"
+qrcode = { version = "0.14", optional = true }
+image = { version = "0.25", optional = true }
 
 # Error handling
 thiserror = "1.0"
@@ -45,7 +41,7 @@ anyhow = "1.0"
 # Utilities
 dirs = "5.0"
 regex = "1.10"
-rpassword = "6.1"
+rpassword = "7.4"
 
 [features]
 default = ["qr-encode"]

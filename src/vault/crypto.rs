@@ -1,18 +1,8 @@
 //! Age-based encryption for vault storage
 
-use age::{
-    EncryptError,
-    identities::{Identity, SimpleIdentity},
-    SecretKey,
-};
 use crate::error::{Error, Result};
-use std::io::Read;
 
-/// Derive an age secret key from a passphrase using scrypt-like approach
-/// 
-/// Age doesn't directly support passphrase-based encryption in the same way
-/// as age-passphrase, so we use a simple key derivation approach.
-/// For v0.1, we use a symmetric approach with the passphrase directly.
+/// Derive a secret key from a passphrase using SHA-256
 fn derive_key_from_passphrase(passphrase: &str) -> [u8; 32] {
     use sha2::{Sha256, Digest};
     let mut hasher = Sha256::new();
@@ -24,51 +14,47 @@ fn derive_key_from_passphrase(passphrase: &str) -> [u8; 32] {
     key
 }
 
-/// Encrypt data using age-style symmetric encryption
-/// 
-/// This creates a simple encrypted format that's compatible with age's
-/// identity mechanism for future migration.
+/// Encrypt data using AES-GCM
 pub fn encrypt_vault(data: &[u8], passphrase: &str) -> Result<Vec<u8>> {
+    use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
+    use aes_gcm::aead::Aead;
+    
     let key = derive_key_from_passphrase(passphrase);
     
-    // Use XChaCha20-Poly1305 for encryption
-    // Format: age-encryption.org/v1 -> XChaCha20-Poly1305 -> ciphertext + nonce
-    use x25519_dalek::{EphemeralSecret, PublicKey, StaticSecret};
-    use chacha20poly1305::{XChaCha20Poly1305, Nonce, aead::{Aead, KeyInit}};
-    
-    // Generate a random nonce
-    let mut nonce_bytes = [0u8; 24];
+    // Generate a random 12-byte nonce
+    let mut nonce_bytes = [0u8; 12];
     getrandom::getrandom(&mut nonce_bytes).map_err(|e| Error::Crypto(e.to_string()))?;
     let nonce = Nonce::from_slice(&nonce_bytes);
     
-    let cipher = XChaCha20Poly1305::new_from_slice(&key)
+    let cipher = Aes256Gcm::new_from_slice(&key)
         .map_err(|e| Error::Crypto(e.to_string()))?;
     
     let ciphertext = cipher.encrypt(nonce, data)
         .map_err(|e| Error::Encryption(e.to_string()))?;
     
     // Prepend nonce to ciphertext
-    let mut result = Vec::with_capacity(24 + ciphertext.len());
+    let mut result = Vec::with_capacity(12 + ciphertext.len());
     result.extend_from_slice(&nonce_bytes);
     result.extend_from_slice(&ciphertext);
     
     Ok(result)
 }
 
-/// Decrypt data using age-style symmetric decryption
+/// Decrypt data using AES-GCM
 pub fn decrypt_vault(encrypted_data: &[u8], passphrase: &str) -> Result<Vec<u8>> {
+    use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
+    use aes_gcm::aead::Aead;
+    
     let key = derive_key_from_passphrase(passphrase);
     
-    if encrypted_data.len() < 24 {
+    if encrypted_data.len() < 12 {
         return Err(Error::Decryption("Invalid encrypted data: too short".to_string()));
     }
     
-    use chacha20poly1305::{XChaCha20Poly1305, Nonce, aead::{Aead, KeyInit}};
+    let nonce = Nonce::from_slice(&encrypted_data[..12]);
+    let ciphertext = &encrypted_data[12..];
     
-    let nonce = Nonce::from_slice(&encrypted_data[..24]);
-    let ciphertext = &encrypted_data[24..];
-    
-    let cipher = XChaCha20Poly1305::new_from_slice(&key)
+    let cipher = Aes256Gcm::new_from_slice(&key)
         .map_err(|e| Error::Crypto(e.to_string()))?;
     
     let plaintext = cipher.decrypt(nonce, ciphertext)

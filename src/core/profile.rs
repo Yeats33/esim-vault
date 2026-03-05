@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::ParsedLpa;
+use crate::core::ParsedLpa;
 
 /// Status of an eSIM profile
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -71,7 +71,7 @@ impl Profile {
     /// Create a new profile with a generated UUID and current timestamp
     pub fn new(label: String, lpa_payload: String) -> Self {
         let now = Utc::now();
-        let parsed = super::parser::parse_lpa(&lpa_payload).ok();
+        let parsed = crate::parser::parse_lpa(&lpa_payload).ok();
 
         Self {
             id: Uuid::new_v4().to_string(),
@@ -123,7 +123,7 @@ impl Profile {
 
     /// Re-parse the LPA payload
     pub fn reparse(&mut self) {
-        self.parsed = super::parser::parse_lpa(&self.lpa_payload_raw).ok();
+        self.parsed = crate::parser::parse_lpa(&self.lpa_payload_raw).ok();
         self.updated_at = Utc::now();
     }
 }

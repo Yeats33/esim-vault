@@ -1,6 +1,6 @@
 //! TUI module for esim-vault
 
-mod app;
+pub mod app;
 mod components;
 mod help;
 
