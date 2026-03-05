@@ -112,6 +112,7 @@ pub fn generate_qr_image(payload: &str, size: u32) -> Result<Vec<u8>> {
 }
 
 /// Reconstruct LPA payload from parsed fields
+#[allow(dead_code)]
 pub fn reconstruct_lpa(parsed: &ParsedLpa) -> String {
     let mut parts: Vec<String> = Vec::new();
 

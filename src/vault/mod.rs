@@ -51,6 +51,7 @@ pub fn create_vault<P: AsRef<Path>>(path: P, passphrase: &str) -> Result<Vault> 
 }
 
 /// Check if a vault file exists
+#[allow(dead_code)]
 pub fn vault_exists<P: AsRef<Path>>(path: P) -> bool {
     path.as_ref().exists()
 }

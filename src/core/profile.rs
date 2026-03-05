@@ -122,6 +122,7 @@ impl Profile {
     }
 
     /// Re-parse the LPA payload
+    #[allow(dead_code)]
     pub fn reparse(&mut self) {
         self.parsed = crate::parser::parse_lpa(&self.lpa_payload_raw).ok();
         self.updated_at = Utc::now();

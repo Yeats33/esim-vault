@@ -43,6 +43,7 @@ impl Vault {
         self.profiles.iter_mut().find(|p| p.id == id)
     }
 
+    #[allow(dead_code)]
     pub fn remove_profile(&mut self, id: &str) -> Option<Profile> {
         if let Some(pos) = self.profiles.iter().position(|p| p.id == id) {
             Some(self.profiles.remove(pos))

@@ -45,6 +45,7 @@ pub struct App {
 }
 
 /// Input modes for the TUI
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InputMode {
     /// Normal navigation mode
@@ -178,6 +179,7 @@ impl App {
     }
 
     /// Clear any error message
+    #[allow(dead_code)]
     pub fn clear_error(&mut self) {
         self.error_message = None;
     }

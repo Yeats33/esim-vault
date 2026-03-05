@@ -4,6 +4,7 @@
 use serde::Deserialize;
 
 /// GitHub Release information
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct Release {
     pub tag_name: String,
@@ -14,6 +15,7 @@ pub struct Release {
 }
 
 /// Latest release response from GitHub API
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct LatestRelease {
     pub tag_name: String,

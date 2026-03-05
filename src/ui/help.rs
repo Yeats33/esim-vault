@@ -1,6 +1,7 @@
 //! Help module for TUI
 
 /// Returns the help text for keyboard shortcuts
+#[allow(dead_code)]
 pub fn get_help_text() -> &'static str {
     r#"
 ╔══════════════════════════════════════════════════════════════════╗

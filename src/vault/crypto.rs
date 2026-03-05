@@ -66,6 +66,7 @@ pub fn decrypt_vault(encrypted_data: &[u8], passphrase: &str) -> Result<Vec<u8>>
 }
 
 /// Prompt for passphrase (used by CLI)
+#[allow(dead_code)]
 pub fn read_passphrase() -> Result<String> {
     use std::io::{self, Write};
 
@@ -95,6 +96,7 @@ pub fn read_passphrase() -> Result<String> {
 }
 
 /// Read passphrase from stdin (for CLI flag)
+#[allow(dead_code)]
 pub fn read_passphrase_from_stdin() -> Result<String> {
     use std::io::{self, Read};
 

@@ -4,6 +4,7 @@ use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+#[allow(dead_code)]
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Vault error: {0}")]
