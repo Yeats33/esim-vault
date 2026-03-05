@@ -340,10 +340,10 @@ pub fn run_cli(matches: clap::ArgMatches) -> Result<()> {
                         }
                     }
 
-                    if !tag_filter.is_empty() {
-                        if !tag_filter.iter().any(|t| p.region_tags.contains(t)) {
-                            return false;
-                        }
+                    if !tag_filter.is_empty()
+                        && !tag_filter.iter().any(|t| p.region_tags.contains(t))
+                    {
+                        return false;
                     }
 
                     if !search_query.is_empty() {
@@ -367,8 +367,8 @@ pub fn run_cli(matches: clap::ArgMatches) -> Result<()> {
 
             // Print table
             println!(
-                "\n{:36} | {:12} | {:15} | {}",
-                "ID", "Status", "Provider", "Label"
+                "\n{:36} | {:12} | {:15} | Label",
+                "ID", "Status", "Provider"
             );
             println!("{:-<36}-+-{:-<12}-+-{:-<15}-+-{:-<30}", '-', '-', '-', '-');
 
