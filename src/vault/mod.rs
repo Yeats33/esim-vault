@@ -2,8 +2,9 @@
 
 mod crypto;
 
-pub use crypto::{decrypt_vault, encrypt_vault, read_passphrase};
+pub use crypto::{decrypt_vault, encrypt_vault};
 
+#[allow(unused_imports)]
 use crate::core::{Profile, Vault};
 use crate::error::{Error, Result};
 use std::fs;

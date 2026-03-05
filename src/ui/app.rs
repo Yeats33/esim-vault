@@ -3,7 +3,6 @@
 use std::time::{Duration, Instant};
 
 use ratatui::{
-    backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span, Text},
@@ -95,10 +94,10 @@ impl App {
                 }
 
                 // Tag filter
-                if !self.tag_filter.is_empty() {
-                    if !self.tag_filter.iter().any(|t| p.region_tags.contains(t)) {
-                        return false;
-                    }
+                if !self.tag_filter.is_empty()
+                    && !self.tag_filter.iter().any(|t| p.region_tags.contains(t))
+                {
+                    return false;
                 }
 
                 // Search filter

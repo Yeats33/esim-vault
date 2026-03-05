@@ -11,8 +11,8 @@ mod vault;
 use std::io::{self, Write};
 
 use crossterm::{
-    event::{self, Event, KeyCode, KeyEventKind},
-    terminal::{disable_raw_mode, enable_raw_mode, size},
+    event::{self, Event, KeyEventKind},
+    terminal::{disable_raw_mode, enable_raw_mode},
 };
 
 use crate::cli::{

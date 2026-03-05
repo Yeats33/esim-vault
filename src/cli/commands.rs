@@ -3,7 +3,7 @@
 use std::io::{self, Read, Write};
 use std::path::PathBuf;
 
-use crate::core::{Profile, ProfileStatus, Vault};
+use crate::core::{Profile, ProfileStatus};
 use crate::error::Result;
 use crate::parser;
 use crate::vault;

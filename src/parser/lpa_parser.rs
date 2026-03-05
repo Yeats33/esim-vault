@@ -1,7 +1,5 @@
 //! LPA (Local Profile Assistant) payload parser implementation
 
-use regex::Regex;
-
 use crate::core::{LpaField, ParsedLpa};
 use crate::error::{Error, Result};
 
@@ -57,7 +55,7 @@ fn parse_parts(parts: &[&str]) -> ParsedLpa {
     let mut parsed = ParsedLpa::default();
 
     // Field 0: SM-DP+ address
-    if parts.len() > 0 {
+    if !parts.is_empty() {
         let smdp = parts[0].to_string();
         if !smdp.is_empty() {
             parsed.smdp = Some(smdp);
@@ -65,7 +63,7 @@ fn parse_parts(parts: &[&str]) -> ParsedLpa {
     }
 
     // Field 1: Activation code
-    if parts.len() > 1 {
+    if parts.len() >= 2 {
         let ac = parts[1].to_string();
         if !ac.is_empty() {
             parsed.activation_code = Some(ac);
@@ -73,7 +71,7 @@ fn parse_parts(parts: &[&str]) -> ParsedLpa {
     }
 
     // Field 2: Confirmation code (optional)
-    if parts.len() > 2 {
+    if parts.len() >= 3 {
         let cc = parts[2].to_string();
         if !cc.is_empty() {
             parsed.confirmation_code = Some(cc);
