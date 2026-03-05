@@ -1,3 +1,6 @@
+# Worktrees
+.worktrees/
+
 # Build results
 target/
 debug/
@@ -23,3 +26,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Temp files
+*.tmp
