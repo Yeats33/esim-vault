@@ -1,0 +1,68 @@
+[package]
+name = "esim-vault"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your@email.com>"]
+description = "Offline-first eSIM wallet/manager TUI tool"
+license = "Apache-2.0"
+repository = "https://github.com/yourusername/esim-vault"
+keywords = ["esim", "tui", "vault", "qrcode"]
+categories = ["command-line-utilities", "cryptography"]
+
+[dependencies]
+# CLI
+clap = { version = "4.5", features = ["derive", "env"] }
+clap_complete = "4.5"
+
+# TUI
+ratatui = "0.27"
+crossterm = "0.28"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Cryptography
+age = "0.9"
+age-core = "0.9"
+uuid = { version = "1.8", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+sha2 = "0.10"
+base64 = "0.22"
+x25519-dalek = { version = "2.0", features = ["static_secrets"] }
+chacha20poly1305 = "0.10"
+rand = "0.8"
+getrandom = "0.2"
+
+# QR Code
+qrcode = "0.14"
+image = "0.25"
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Utilities
+dirs = "5.0"
+regex = "1.10"
+rpassword = "6.1"
+
+[features]
+default = ["qr-encode"]
+qr-encode = ["dep:qrcode", "dep:image"]
+qr-decode = []  # Requires system dependencies: zbar
+
+[dev-dependencies]
+tempfile = "3.10"
+assert_cmd = "2.0"
+predicates = "3.1"
+
+[[bin]]
+name = "esimvault"
+path = "src/main.rs"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+panic = "abort"
