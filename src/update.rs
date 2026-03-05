@@ -26,6 +26,7 @@ pub struct LatestRelease {
 }
 
 /// Version comparison result
+#[allow(dead_code)]
 #[derive(Debug, PartialEq, Eq)]
 pub enum UpdateStatus {
     UpToDate,
@@ -83,6 +84,7 @@ pub fn check_for_update(repo_owner: &str, repo_name: &str) -> Result<UpdateStatu
 
 /// Compare two semantic versions
 /// Returns: positive if a > b, negative if a < b, zero if equal
+#[allow(dead_code)]
 pub fn compare_versions(a: &str, b: &str) -> i32 {
     let parse_version = |v: &str| -> Vec<u32> {
         // Remove 'v' or 'V' prefix if present

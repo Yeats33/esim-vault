@@ -566,10 +566,10 @@ pub fn run_cli(matches: clap::ArgMatches) -> Result<()> {
             Ok(())
         }
 
-        Some(("check-update", sub_matches)) => {
+        Some(("check-update", _sub_matches)) => {
             #[cfg(feature = "check-update")]
             {
-                let repo = sub_matches
+                let repo = _sub_matches
                     .get_one::<String>("repo")
                     .cloned()
                     .unwrap_or_else(|| "Yeats33/esim-vault".to_string());
